@@ -7,6 +7,8 @@ RolyPoly is a side scroller game where the user collects as many points possible
 
 * User controls speed of character with left and right arrow keys
 * User can jump with spacebar, controlling height depending on duration of keypress
+* User accumulates points by touching certain objects
+* Game is over when user hits an obstacle
 
 ## Technology
 
