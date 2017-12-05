@@ -49,7 +49,7 @@ body {
   justify-content: center;
   margin: 0 auto;
   width: 100%;
-  max-width: 1400px;
+  max-width: 1000px;
   font-family: sans-serif;
 }
 
@@ -83,8 +83,4 @@ header h1 {
 .external-links {
   display: flex;
   align-items: center;
-}
-
-canvas {
-  width: 100%;
 }
