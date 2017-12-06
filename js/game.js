@@ -1,24 +1,23 @@
-import Matter from 'matter-js';
-import { Render } from 'matter-js';
+import {
+  Engine,
+  World,
+  Bodies,
+  Body,
+  Constraint,
+  Composites,
+  Events,
+  Render,
+  MouseConstraint,
+  SAT,
+} from 'matter-js';
+import decomp from 'poly-decomp';
+import Player from './player';
+
+global.decomp = decomp;
 
 const Game = () => {
   let canvas = document.getElementById('rolypoly');
   let ctx = canvas.getContext('2d');
-
-  ctx.beginPath();
-  ctx.rect(0, 0, 960, 540);
-  ctx.fillStyle = '#BCDDEF';
-  ctx.fill();
-  ctx.closePath();
-
-  const Engine = Matter.Engine,
-    World = Matter.World,
-    Bodies = Matter.Bodies,
-    Body = Matter.Body,
-    Constraint = Matter.Constraint,
-    Composites = Matter.Composites,
-    Events = Matter.Events,
-    MouseConstraint = Matter.MouseConstraint;
 
   const engine = Engine.create();
 
@@ -28,20 +27,154 @@ const Game = () => {
     options: {
       width: 960,
       height: 540,
+      background: 'url("./images/sky.png")',
       wireframes: false
     }
   });
 
-  const boxA = Bodies.rectangle(400, 200, 80, 80);
-  const ballA = Bodies.circle(380, 100, 40, 10);
-  const ballB = Bodies.circle(460, 10, 40, 10);
-  const ground = Bodies.rectangle(400, 380, 810, 60, { isStatic: true });
+  let currHeight = 320;
+  const ground = Bodies.rectangle(
+    400,
+    650,
+    810,
+    currHeight,
+    { isStatic: true }
+  );
+  let currGround = ground;
+  let grounds = [currGround];
 
-  World.add(engine.world, [boxA, ballA, ballB, ground]);
+  let player = new Player();
+  let forceY = -0.5;
+  let ballGroundCol;
 
-  Engine.run(engine);
+  document.addEventListener('keydown', e => {
+    console.log(SAT.collides(player.body, currGround));
+    let prevBallGroundCol = ballGroundCol;
+    ballGroundCol = SAT.collides(player.body, currGround, prevBallGroundCol);
+    const isColliding = (obj, idx, arr) => {
+      return SAT.collides(player.body, obj).collided;
+    };
 
+    console.log(forceY);
+    switch (e.key) {
+      case 'ArrowUp':
+      case ' ':
+        if (grounds.some(isColliding)) {
+          Body.applyForce(
+            player.body,
+            {x: player.body.position.x, y: player.body.position.y},
+            {x: 0, y: forceY}
+          );
+        }
+        break;
+      // case 'ArrowRight':
+      //   Body.applyForce(
+      //     player.body,
+      //     {x: player.body.position.x, y: player.body.position.y},
+      //     {x: 0.05, y: 0}
+      //   );
+      //   Body.setAngularVelocity(player.body, Math.PI/6);
+      //   break;
+      // case 'ArrowLeft':
+      //   Body.setAngularVelocity(player.body, Math.PI/10);
+    }
+  });
+    // if (e.keyCode === 32 || e.keyCode === 38) {
+    //   Body.applyForce(
+    //     player,
+    //     {x: player.position.x, y: player.position.y},
+    //     {x: 0, y: -0.05}
+    //   );
+    // }
+    // if (e.keyCode === 39) {
+    //   Body.applyForce(
+    //     player, {x: player.position.x, y: player.position.y}, {x: 0.05, y: 0}
+    //   );
+    //   Body.setAngularVelocity(player, Math.PI/6);
+    // }
+    // if (e.keyCode === 37) {
+    //   Body.setAngularVelocity(player, Math.PI/10);
+    // }
+  const randomBounds = (min, max) => {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
+
+  const circle = Bodies.circle(100, 100, 40, 10);
+  console.log(player);
+
+  engine.world.gravity = { x: 0, y: 0, scale: 0 };
+  World.add(engine.world, [player.body, ground]);
+
+  // Engine.run(engine);
   Render.run(render);
+
+  render.options.hasBounds = true;
+  let initEngBoundMaxX = render.bounds.max.x;
+  let initEngBoundMaxY = render.bounds.max.y;
+
+  // let centerX = -200;
+  // let centerY = -200;
+
+  let currGroundEnd = currGround.position.x + currHeight;
+  let groundGap = 800;
+  let ballToEndThreshold = 100;
+  let groundRemoveThreshold = currHeight / 4;
+
+  (function run() {
+    console.log(player.body.position.x < Math.abs(ballToEndThreshold - currGroundEnd));
+    console.log(player.body.position.x);
+    console.log(ballToEndThreshold);
+    console.log(currGroundEnd);
+
+    if (player.body.position.x > Math.abs(groundRemoveThreshold - currGroundEnd) + 100) {
+      World.remove(engine.world, currGround);
+    }
+
+    if (player.body.position.x > Math.abs(ballToEndThreshold - currGroundEnd)) {
+      currGround = Bodies.rectangle(
+        currGroundEnd + groundGap, // x
+        currGround.position.y, // y
+        810, // width
+        currHeight, // height
+        { isStatic: true } // options
+      );
+
+      grounds.push(currGround);
+      if (grounds.length > 2) {
+        grounds.shift();
+      }
+      // console.log(currGroundEnd + groundGap);
+      // console.log(currGround.position.y);
+      // currGround = Bodies.rectangle(
+      //   400, 250, 810, currHeight, { isStatic: true }
+      // );
+      currGroundEnd = currGround.position.x + currHeight;
+      World.add(engine.world, [currGround]);
+    }
+    // ground.position.x += 1;
+    window.requestAnimationFrame(run);
+    Engine.update(engine, 1000 / 60);
+    Body.applyForce(
+      player.body, // body
+      {x: player.body.position.x, y: player.body.position.y}, // position
+      {x: 0, y: 0.03} // force
+    );
+    Body.applyForce(
+      player.body,
+      {x: player.body.position.x, y: player.body.position.y},
+      {x: 0.005, y: 0}
+    );
+
+    render.bounds.min.x = player.body.position.x - (render.options.width) / 2;
+    render.bounds.max.x =
+      player.body.position.x - (render.options.width) / 2 + initEngBoundMaxX;
+
+    // render.bounds.min.y = player.body.position.y - render.options.height / 2;
+    // render.bounds.max.y =
+    //   player.body.position.y - render.options.height / 2 + initEngBoundMaxY;
+  })();
 };
 
 export default Game;
