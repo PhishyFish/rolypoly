@@ -76,7 +76,7 @@ const Game = () => {
 
   let speed = 0.0025;
   document.addEventListener('keydown', e => {
-    console.log(SAT.collides(player.body, currGround));
+    // console.log(SAT.collides(player.body, currGround));
     let prevBallGroundCol = ballGroundCol;
     ballGroundCol = SAT.collides(player.body, currGround, prevBallGroundCol);
     // if (e.key === 'Enter') {
@@ -85,6 +85,7 @@ const Game = () => {
     switch (e.key) {
       case 'ArrowUp':
       case ' ':
+      e.preventDefault();
       if (grounds.some(isColliding)) {
           Body.applyForce(
             player.body,
@@ -129,7 +130,7 @@ const Game = () => {
   };
 
   const circle = Bodies.circle(100, 100, 40, 10);
-  console.log('player: ', player);
+  // console.log('player: ', player);
 
   engine.world.gravity = { x: 0, y: 0, scale: 0 };
   World.add(engine.world, [player.body, ground]);
@@ -160,11 +161,11 @@ const Game = () => {
     let finalScore = document.getElementById('final-score');
     scorebox.innerHTML = `${score}`;
     finalScore.innerHTML = `Final score: ${score}`;
-    console.log('bodies', engine.world.bodies.length);
-    console.log(player.body.position.x < Math.abs(ballToEndThreshold - currGroundEnd));
-    console.log('player position x: ', player.body.position.x);
-    console.log('ballToEndThreshold', ballToEndThreshold);
-    console.log('currGroundEnd', currGroundEnd);
+    // console.log('bodies', engine.world.bodies.length);
+    // console.log(player.body.position.x < Math.abs(ballToEndThreshold - currGroundEnd));
+    // console.log('player position x: ', player.body.position.x);
+    // console.log('ballToEndThreshold', ballToEndThreshold);
+    // console.log('currGroundEnd', currGroundEnd);
 
     // not falling and exceeded height
     if (!falling && (player.body.position.y <= maxHeight) || !jumpKeyPressed) {
@@ -184,7 +185,7 @@ const Game = () => {
     if (falling) {
       upwardForce = 0;
     }
-    console.log('player vel y', player.body.velocity.y);
+    // console.log('player vel y', player.body.velocity.y);
 
     if (player.body.position.y <= maxHeight) {
       Body.setVelocity(player.body, {x: player.body.velocity.x, y: 0});
@@ -217,7 +218,7 @@ const Game = () => {
           coin = new Coin(coinX, coinY, false);
         }
 
-        console.log('coin', coin.collisionFilter);
+        // console.log('coin', coin.collisionFilter);
         coins.push(coin);
         World.add(world, coin.body);
         coinX += 80;

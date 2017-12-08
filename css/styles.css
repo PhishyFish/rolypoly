@@ -50,7 +50,7 @@ body {
   margin: 0 auto;
   width: 100%;
   max-width: 1000px;
-  font-family: sans-serif;
+  font-family: 'Exo 2', sans-serif;
 }
 
 main {
@@ -78,6 +78,7 @@ header i {
 header h1 {
   font-weight: bold;
   font-size: 36px;
+  color: #333;
 }
 
 .external-links {
