@@ -61,12 +61,13 @@ const Game = () => {
   let coins = [];
 
   let player = new Player();
-  let forceY = -0.05;
+  let forceY = -0.1;
+  let jumpForce = -0.4;
   let ballGroundCol;
   let upwardForce = 0;
   let falling = true;
 
-  const maxHeight = render.bounds.min.y + 200;
+  const maxHeight = render.bounds.min.y - 1000;
   let jumpKeyPressed = false;
 
   const isColliding = (obj, idx, arr) => {
@@ -84,6 +85,13 @@ const Game = () => {
     switch (e.key) {
       case 'ArrowUp':
       case ' ':
+      if (grounds.some(isColliding)) {
+          Body.applyForce(
+            player.body,
+            {x: player.body.position.x, y: player.body.position.y},
+            {x: 0, y: jumpForce}
+          );
+        }
         jumpKeyPressed = true;
         break;
       case 'ArrowRight':
@@ -110,7 +118,7 @@ const Game = () => {
 
   document.addEventListener('keyup', e => {
     if (e.key === 'ArrowUp' || e.key === ' ') {
-      jumpKeyPressed = false;
+      Body.setVelocity(player.body, {x: player.body.velocity.x, y: 0});
     }
   });
 
@@ -142,12 +150,16 @@ const Game = () => {
   let ticks = 0;
 
   (function run() {
+    let start = document.getElementById('start');
+    start.classList.remove('open');
     ticks++;
     if (ticks % 100 === 0) {
-      speed += 0.001;
+      speed *= 1.1;
     }
     let scorebox = document.getElementById('score');
+    let finalScore = document.getElementById('final-score');
     scorebox.innerHTML = `${score}`;
+    finalScore.innerHTML = `Final score: ${score}`;
     console.log('bodies', engine.world.bodies.length);
     console.log(player.body.position.x < Math.abs(ballToEndThreshold - currGroundEnd));
     console.log('player position x: ', player.body.position.x);
@@ -178,16 +190,12 @@ const Game = () => {
       Body.setVelocity(player.body, {x: player.body.velocity.x, y: 0});
     }
 
-    Body.applyForce(
-      player.body,
-      {x: player.body.position.x, y: player.body.position.y},
-      {x: 0, y: upwardForce}
-    );
-
     if (player.body.position.y > render.bounds.max.y + 100) {
       speed = 0;
       World.remove(engine.world, player.body);
       Engine.clear(engine);
+      let end = document.getElementById('end');
+      end.classList.add('open');
     }
 
     let needToSpawnGround = player.body.position.x > Math.abs(ballToEndThreshold - currGroundEnd);
@@ -195,7 +203,7 @@ const Game = () => {
     const spawnCoin = (world, _currGroundEnd, _groundGap, _currentGround) => {
       let coin;
       let evilCoin = randomBounds(0, 1);
-      for (let i = 0; i < randomBounds(0, 10); i++) {
+      for (let i = 0; i < randomBounds(0, 8); i++) {
 
         let coinX = randomBounds(_currentGround.position.x, _currGroundEnd);
         let coinY = randomBounds(_currentGround.position.y - 400, _currentGround.position.y - currHeight);
@@ -206,7 +214,6 @@ const Game = () => {
           coin.body.render.fillStyle = '#333';
         } else {
           coinX = randomBounds(_currGroundEnd, _currGroundEnd + _groundGap + 100);
-
           coin = new Coin(coinX, coinY, false);
         }
 
@@ -239,10 +246,14 @@ const Game = () => {
           if (coin.evil) {
             // restartGame();
             Runner.stop(render);
+            let end = document.getElementById('end');
+            end.classList.add('open');
           }
           World.remove(engine.world, coin.body);
           coinsToRemove.push(idx);
-          score += 10;
+          if (!coin.evil) {
+            score += 10;
+          }
         }
       });
 
@@ -288,10 +299,11 @@ const Game = () => {
     // ground.position.x += 1;
     window.requestAnimationFrame(run);
     Engine.update(engine, 1000 / 60);
+    let gravity = 0.02;
     Body.applyForce(
       player.body, // body
       {x: player.body.position.x, y: player.body.position.y}, // position
-      {x: speed, y: 0.03} // force
+      {x: speed, y: gravity} // force
     );
     // Body.applyForce(
     //   player.body,

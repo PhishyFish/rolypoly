@@ -99,3 +99,42 @@ header h1 {
   font-weight: bold;
   color: #fff;
 }
+
+#start, #end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 540px;
+  font-size: 48px;
+  font-weight: bold;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+#start.open, #end.open {
+  opacity: 1;
+}
+
+#final-score {
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+input {
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  font-size: 18px;
+  padding: 10px 20px;
+  color: #fff;
+  border-radius: 5px;
+  background: #3EB755;
+  border: none;
+}
