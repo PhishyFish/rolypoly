@@ -9,6 +9,7 @@ import {
   Render,
   MouseConstraint,
   SAT,
+  Runner
 } from 'matter-js';
 import decomp from 'poly-decomp';
 import Player from './player';
@@ -16,7 +17,20 @@ import Coin from './coin';
 
 global.decomp = decomp;
 
+
 const Game = () => {
+  // const restartGame = () => {
+  //   Runner.stop(render);
+  //   World.remove(engine.world, player.body);
+  //   World.clear(engine.world);
+  //   Engine.clear(engine);
+  //   Engine.events = {};
+  //   Game()
+  //   player.body.position.x = 100;
+  //   player.body.position.y = 100;
+  //   Body.setVelocity(player.body, {x: 0, y: 0});
+  // };
+
   let canvas = document.getElementById('rolypoly');
   let ctx = canvas.getContext('2d');
 
@@ -47,28 +61,30 @@ const Game = () => {
   let coins = [];
 
   let player = new Player();
-  let forceY = -0.5;
+  let forceY = -0.05;
   let ballGroundCol;
+  let upwardForce = 0;
+  let falling = true;
 
-  let speed = 0.005;
+  const maxHeight = render.bounds.min.y + 200;
+  let jumpKeyPressed = false;
+
+  const isColliding = (obj, idx, arr) => {
+    return SAT.collides(player.body, obj).collided;
+  };
+
+  let speed = 0.0025;
   document.addEventListener('keydown', e => {
     console.log(SAT.collides(player.body, currGround));
     let prevBallGroundCol = ballGroundCol;
     ballGroundCol = SAT.collides(player.body, currGround, prevBallGroundCol);
-    const isColliding = (obj, idx, arr) => {
-      return SAT.collides(player.body, obj).collided;
-    };
-
+    // if (e.key === 'Enter') {
+    //   restartGame();
+    // }
     switch (e.key) {
       case 'ArrowUp':
       case ' ':
-        if (grounds.some(isColliding)) {
-          Body.applyForce(
-            player.body,
-            {x: player.body.position.x, y: player.body.position.y},
-            {x: 0, y: forceY}
-          );
-        }
+        jumpKeyPressed = true;
         break;
       case 'ArrowRight':
         speed *= 1.1;
@@ -89,6 +105,12 @@ const Game = () => {
         }
         break;
       //   Body.setAngularVelocity(player.body, Math.PI/10);
+    }
+  });
+
+  document.addEventListener('keyup', e => {
+    if (e.key === 'ArrowUp' || e.key === ' ') {
+      jumpKeyPressed = false;
     }
   });
 
@@ -117,7 +139,13 @@ const Game = () => {
   let groundRemoveThreshold = currHeight / 4;
 
   let score = 0;
+  let ticks = 0;
+
   (function run() {
+    ticks++;
+    if (ticks % 100 === 0) {
+      speed += 0.001;
+    }
     let scorebox = document.getElementById('score');
     scorebox.innerHTML = `${score}`;
     console.log('bodies', engine.world.bodies.length);
@@ -125,6 +153,36 @@ const Game = () => {
     console.log('player position x: ', player.body.position.x);
     console.log('ballToEndThreshold', ballToEndThreshold);
     console.log('currGroundEnd', currGroundEnd);
+
+    // not falling and exceeded height
+    if (!falling && (player.body.position.y <= maxHeight) || !jumpKeyPressed) {
+      falling = true;
+    }
+
+    // fell onto ground
+    if (grounds.some(isColliding) && falling) {
+      falling = false;
+    }
+
+    // jump key was pressed and not released, height is within bounds, and not falling
+    if (jumpKeyPressed && (player.body.position.y > maxHeight) && !falling) {
+      upwardForce = forceY;
+    }
+
+    if (falling) {
+      upwardForce = 0;
+    }
+    console.log('player vel y', player.body.velocity.y);
+
+    if (player.body.position.y <= maxHeight) {
+      Body.setVelocity(player.body, {x: player.body.velocity.x, y: 0});
+    }
+
+    Body.applyForce(
+      player.body,
+      {x: player.body.position.x, y: player.body.position.y},
+      {x: 0, y: upwardForce}
+    );
 
     if (player.body.position.y > render.bounds.max.y + 100) {
       speed = 0;
@@ -135,11 +193,23 @@ const Game = () => {
     let needToSpawnGround = player.body.position.x > Math.abs(ballToEndThreshold - currGroundEnd);
 
     const spawnCoin = (world, _currGroundEnd, _groundGap, _currentGround) => {
-      let coinX = randomBounds(_currGroundEnd, _currGroundEnd + _groundGap + 100);
       let coin;
+      let evilCoin = randomBounds(0, 1);
       for (let i = 0; i < randomBounds(0, 10); i++) {
+
+        let coinX = randomBounds(_currentGround.position.x, _currGroundEnd);
         let coinY = randomBounds(_currentGround.position.y - 400, _currentGround.position.y - currHeight);
-        coin = new Coin(coinX, coinY);
+        if (evilCoin) {
+          coinX = randomBounds(_currentGround.position.x, _currGroundEnd);
+          coin = new Coin(coinX, _currentGround.position.y - 175, true);
+          coin.body.collisionFilter.group = 0;
+          coin.body.render.fillStyle = '#333';
+        } else {
+          coinX = randomBounds(_currGroundEnd, _currGroundEnd + _groundGap + 100);
+
+          coin = new Coin(coinX, coinY, false);
+        }
+
         console.log('coin', coin.collisionFilter);
         coins.push(coin);
         World.add(world, coin.body);
@@ -162,11 +232,14 @@ const Game = () => {
       });
     };
 
-
     const processCollidedCoins = () => {
       coinsToRemove = [];
       coins.forEach((coin, idx) => {
         if (SAT.collides(player.body, coin.body).collided) {
+          if (coin.evil) {
+            // restartGame();
+            Runner.stop(render);
+          }
           World.remove(engine.world, coin.body);
           coinsToRemove.push(idx);
           score += 10;
