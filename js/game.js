@@ -119,14 +119,12 @@ const Game = () => {
   let score = 0;
   (function run() {
     let scorebox = document.getElementById('score');
-    console.log(scorebox);
     scorebox.innerHTML = `${score}`;
     console.log('bodies', engine.world.bodies.length);
     console.log(player.body.position.x < Math.abs(ballToEndThreshold - currGroundEnd));
     console.log('player position x: ', player.body.position.x);
     console.log('ballToEndThreshold', ballToEndThreshold);
     console.log('currGroundEnd', currGroundEnd);
-    console.log(player.body.collisionFilter, ground.collisionFilter);
 
     if (player.body.position.y > render.bounds.max.y + 100) {
       speed = 0;
@@ -137,16 +135,15 @@ const Game = () => {
     let needToSpawnGround = player.body.position.x > Math.abs(ballToEndThreshold - currGroundEnd);
 
     const spawnCoin = (world, _currGroundEnd, _groundGap, _currentGround) => {
-      let coinX = _currGroundEnd + _groundGap + 100;
-      let coinY = _currentGround.position.y - 300;
+      let coinX = randomBounds(_currGroundEnd, _currGroundEnd + _groundGap + 100);
       let coin;
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < randomBounds(0, 10); i++) {
+        let coinY = randomBounds(_currentGround.position.y - 400, _currentGround.position.y - currHeight);
         coin = new Coin(coinX, coinY);
         console.log('coin', coin.collisionFilter);
         coins.push(coin);
         World.add(world, coin.body);
-        coinX += 50;
-        coinY += 20 + i * i * 3;
+        coinX += 80;
       }
     };
 
@@ -165,7 +162,6 @@ const Game = () => {
       });
     };
 
-    cleanCoins();
 
     const processCollidedCoins = () => {
       coinsToRemove = [];
@@ -183,6 +179,7 @@ const Game = () => {
     };
 
     processCollidedCoins();
+    cleanCoins();
 
     const spawnNewGround = (_grounds, world) => {
         currGround = Bodies.rectangle(

@@ -1,8 +1,10 @@
 import { Bodies, Body } from 'matter-js';
 
+const coinWidth = 20;
+
 class Coin {
   constructor(x, y) {
-    this.width = 20;
+    this.width = coinWidth;
     this.body = Bodies.circle(
       x, y, this.width,
       {
