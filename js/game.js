@@ -116,7 +116,11 @@ const Game = () => {
   let ballToEndThreshold = 100;
   let groundRemoveThreshold = currHeight / 4;
 
+  let score = 0;
   (function run() {
+    let scorebox = document.getElementById('score');
+    console.log(scorebox);
+    scorebox.innerHTML = `${score}`;
     console.log('bodies', engine.world.bodies.length);
     console.log(player.body.position.x < Math.abs(ballToEndThreshold - currGroundEnd));
     console.log('player position x: ', player.body.position.x);
@@ -145,6 +149,7 @@ const Game = () => {
         coinY += 20 + i * i * 3;
       }
     };
+
     let coinsToRemove;
     const cleanCoins = () => {
       coinsToRemove = [];
@@ -161,6 +166,23 @@ const Game = () => {
     };
 
     cleanCoins();
+
+    const processCollidedCoins = () => {
+      coinsToRemove = [];
+      coins.forEach((coin, idx) => {
+        if (SAT.collides(player.body, coin.body).collided) {
+          World.remove(engine.world, coin.body);
+          coinsToRemove.push(idx);
+          score += 10;
+        }
+      });
+
+      coinsToRemove.forEach(idx => {
+        coins.splice(idx, 1);
+      });
+    };
+
+    processCollidedCoins();
 
     const spawnNewGround = (_grounds, world) => {
         currGround = Bodies.rectangle(
