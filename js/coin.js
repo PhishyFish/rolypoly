@@ -11,6 +11,9 @@ class Coin {
           //   texture:
           // }
         },
+        collisionFilter: {
+          group: -1
+        },
         isStatic: true
       }
     );

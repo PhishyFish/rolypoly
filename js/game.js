@@ -151,12 +151,14 @@ const Game = () => {
       currGroundEnd = currGround.position.x + currHeight;
 
       let coinX = currGroundEnd + groundGap + 100;
-      let coinY = currGround.position.y - 150;
+      let coinY = currGround.position.y - 300;
+      let coin;
       for (let i = 0; i < 4; i++) {
-        let coin = new Coin(coinX, coinY);
-        World.add(engine.world, coin);
-        coinX += 30;
-        coinY += 20;
+        coin = new Coin(coinX, coinY);
+        console.log('coin', coin.collisionFilter);
+        World.add(engine.world, coin.body);
+        coinX += 50;
+        coinY += 20 + i * i * 3;
       }
 
       World.add(engine.world, [currGround]);
