@@ -12,10 +12,10 @@ RolyPoly is a side scroller game where the user collects as many points possible
 
 ## Wireframes
 
-![site wireframe](https://github.com/PhishyFish/rolypoly/blob/master/site.png?raw=true)
+![site wireframe](https://github.com/PhishyFish/rolypoly/blob/master/docs/site.png?raw=true)
 The site will consist of the title/header at the top, along with external links to the GitHub repo and my LinkedIn. The game will be displayed in the center, and instructions will be included below.
 
-![game wireframe](https://github.com/PhishyFish/rolypoly/blob/master/game.png?raw=true)
+![game wireframe](https://github.com/PhishyFish/rolypoly/blob/master/docs/game.png?raw=true)
 The player will control a character that is continuously rolling to the right. The natural speed of the game gradually increases as the player survives longer. To an extent, the player can also moderate the speed at which the character is rolling, though the game will still increase its natural speed independently. All gameplay is through the keyboard.
 
 ## Technologies

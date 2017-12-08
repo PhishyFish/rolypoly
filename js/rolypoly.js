@@ -1,5 +1,10 @@
+import { Engine, World } from 'matter-js';
 import Game from './game';
 
 document.addEventListener('DOMContentLoaded', () => {
-  Game();
+  document.addEventListener('keypress', e => {
+    if (e.key === 'Enter') {
+      Game();
+    }
+  });
 });

@@ -19,7 +19,7 @@ const Game = () => {
   let canvas = document.getElementById('rolypoly');
   let ctx = canvas.getContext('2d');
 
-  const engine = Engine.create();
+  var engine = Engine.create();
 
   const render = Render.create({
     canvas: canvas,
@@ -32,11 +32,12 @@ const Game = () => {
     }
   });
 
+  let currWidth = 810;
   let currHeight = 320;
   const ground = Bodies.rectangle(
     400,
     650,
-    810,
+    currWidth,
     currHeight,
     { isStatic: true }
   );
@@ -47,6 +48,7 @@ const Game = () => {
   let forceY = -0.5;
   let ballGroundCol;
 
+  let speed = 0.005;
   document.addEventListener('keydown', e => {
     console.log(SAT.collides(player.body, currGround));
     let prevBallGroundCol = ballGroundCol;
@@ -55,7 +57,6 @@ const Game = () => {
       return SAT.collides(player.body, obj).collided;
     };
 
-    console.log(forceY);
     switch (e.key) {
       case 'ArrowUp':
       case ' ':
@@ -67,34 +68,28 @@ const Game = () => {
           );
         }
         break;
-      // case 'ArrowRight':
+      case 'ArrowRight':
+        speed *= 1.1;
+        if (speed > 0.01) {
+          speed = 0.01;
+        }
       //   Body.applyForce(
       //     player.body,
       //     {x: player.body.position.x, y: player.body.position.y},
       //     {x: 0.05, y: 0}
       //   );
       //   Body.setAngularVelocity(player.body, Math.PI/6);
-      //   break;
-      // case 'ArrowLeft':
+        break;
+      case 'ArrowLeft':
+        speed *= 0.9;
+        if (speed < 0.002) {
+          speed = 0.002;
+        }
+        break;
       //   Body.setAngularVelocity(player.body, Math.PI/10);
     }
   });
-    // if (e.keyCode === 32 || e.keyCode === 38) {
-    //   Body.applyForce(
-    //     player,
-    //     {x: player.position.x, y: player.position.y},
-    //     {x: 0, y: -0.05}
-    //   );
-    // }
-    // if (e.keyCode === 39) {
-    //   Body.applyForce(
-    //     player, {x: player.position.x, y: player.position.y}, {x: 0.05, y: 0}
-    //   );
-    //   Body.setAngularVelocity(player, Math.PI/6);
-    // }
-    // if (e.keyCode === 37) {
-    //   Body.setAngularVelocity(player, Math.PI/10);
-    // }
+
   const randomBounds = (min, max) => {
     min = Math.ceil(min);
     max = Math.floor(max);
@@ -102,7 +97,7 @@ const Game = () => {
   };
 
   const circle = Bodies.circle(100, 100, 40, 10);
-  console.log(player);
+  console.log('player: ', player);
 
   engine.world.gravity = { x: 0, y: 0, scale: 0 };
   World.add(engine.world, [player.body, ground]);
@@ -114,29 +109,34 @@ const Game = () => {
   let initEngBoundMaxX = render.bounds.max.x;
   let initEngBoundMaxY = render.bounds.max.y;
 
-  // let centerX = -200;
-  // let centerY = -200;
-
   let currGroundEnd = currGround.position.x + currHeight;
   let groundGap = 800;
   let ballToEndThreshold = 100;
   let groundRemoveThreshold = currHeight / 4;
 
   (function run() {
+    console.log('bodies', engine.world.bodies.length);
     console.log(player.body.position.x < Math.abs(ballToEndThreshold - currGroundEnd));
-    console.log(player.body.position.x);
-    console.log(ballToEndThreshold);
-    console.log(currGroundEnd);
+    console.log('player position x: ', player.body.position.x);
+    console.log('ballToEndThreshold', ballToEndThreshold);
+    console.log('currGroundEnd', currGroundEnd);
+    console.log(player.body.collisionFilter, ground.collisionFilter);
 
     if (player.body.position.x > Math.abs(groundRemoveThreshold - currGroundEnd) + 100) {
       World.remove(engine.world, currGround);
+    }
+
+    if (player.body.position.y > render.bounds.max.y + 100) {
+      speed = 0;
+      World.remove(engine.world, player.body);
+      Engine.clear(engine);
     }
 
     if (player.body.position.x > Math.abs(ballToEndThreshold - currGroundEnd)) {
       currGround = Bodies.rectangle(
         currGroundEnd + groundGap, // x
         currGround.position.y, // y
-        810, // width
+        currWidth, // width
         currHeight, // height
         { isStatic: true } // options
       );
@@ -159,17 +159,17 @@ const Game = () => {
     Body.applyForce(
       player.body, // body
       {x: player.body.position.x, y: player.body.position.y}, // position
-      {x: 0, y: 0.03} // force
+      {x: speed, y: 0.03} // force
     );
-    Body.applyForce(
-      player.body,
-      {x: player.body.position.x, y: player.body.position.y},
-      {x: 0.005, y: 0}
-    );
+    // Body.applyForce(
+    //   player.body,
+    //   {x: player.body.position.x, y: player.body.position.y},
+    //   {x: 0.005, y: 0}
+    // );
 
-    render.bounds.min.x = player.body.position.x - (render.options.width) / 2;
+    render.bounds.min.x = player.body.position.x - render.options.width / 2;
     render.bounds.max.x =
-      player.body.position.x - (render.options.width) / 2 + initEngBoundMaxX;
+      player.body.position.x - render.options.width / 2 + initEngBoundMaxX;
 
     // render.bounds.min.y = player.body.position.y - render.options.height / 2;
     // render.bounds.max.y =
