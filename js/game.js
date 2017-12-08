@@ -12,6 +12,7 @@ import {
 } from 'matter-js';
 import decomp from 'poly-decomp';
 import Player from './player';
+import Coin from './coin';
 
 global.decomp = decomp;
 
@@ -122,10 +123,6 @@ const Game = () => {
     console.log('currGroundEnd', currGroundEnd);
     console.log(player.body.collisionFilter, ground.collisionFilter);
 
-    if (player.body.position.x > Math.abs(groundRemoveThreshold - currGroundEnd) + 100) {
-      World.remove(engine.world, currGround);
-    }
-
     if (player.body.position.y > render.bounds.max.y + 100) {
       speed = 0;
       World.remove(engine.world, player.body);
@@ -143,7 +140,8 @@ const Game = () => {
 
       grounds.push(currGround);
       if (grounds.length > 2) {
-        grounds.shift();
+        let oldGround = grounds.shift();
+        World.remove(engine.world, oldGround);
       }
       // console.log(currGroundEnd + groundGap);
       // console.log(currGround.position.y);
@@ -151,6 +149,16 @@ const Game = () => {
       //   400, 250, 810, currHeight, { isStatic: true }
       // );
       currGroundEnd = currGround.position.x + currHeight;
+
+      let coinX = currGroundEnd + groundGap + 100;
+      let coinY = currGround.position.y - 150;
+      for (let i = 0; i < 4; i++) {
+        let coin = new Coin(coinX, coinY);
+        World.add(engine.world, coin);
+        coinX += 30;
+        coinY += 20;
+      }
+
       World.add(engine.world, [currGround]);
     }
     // ground.position.x += 1;
