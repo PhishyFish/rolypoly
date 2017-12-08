@@ -44,6 +44,7 @@ const Game = () => {
   );
   let currGround = ground;
   let grounds = [currGround];
+  let coins = [];
 
   let player = new Player();
   let forceY = -0.5;
@@ -129,8 +130,40 @@ const Game = () => {
       Engine.clear(engine);
     }
 
-    if (player.body.position.x > Math.abs(ballToEndThreshold - currGroundEnd)) {
-      currGround = Bodies.rectangle(
+    let needToSpawnGround = player.body.position.x > Math.abs(ballToEndThreshold - currGroundEnd);
+
+    const spawnCoin = (world, _currGroundEnd, _groundGap, _currentGround) => {
+      let coinX = _currGroundEnd + _groundGap + 100;
+      let coinY = _currentGround.position.y - 300;
+      let coin;
+      for (let i = 0; i < 4; i++) {
+        coin = new Coin(coinX, coinY);
+        console.log('coin', coin.collisionFilter);
+        coins.push(coin);
+        World.add(world, coin.body);
+        coinX += 50;
+        coinY += 20 + i * i * 3;
+      }
+    };
+    let coinsToRemove;
+    const cleanCoins = () => {
+      coinsToRemove = [];
+      coins.forEach((coin, idx) => {
+        if (coin.body.position.x < (render.bounds.min.x - coin.width)) {
+          World.remove(engine.world, coin.body);
+          coinsToRemove.push(idx);
+        }
+      });
+
+      coinsToRemove.forEach(idx => {
+        coins.splice(idx, 1);
+      });
+    };
+
+    cleanCoins();
+
+    const spawnNewGround = (_grounds, world) => {
+        currGround = Bodies.rectangle(
         currGroundEnd + groundGap, // x
         currGround.position.y, // y
         currWidth, // width
@@ -138,10 +171,10 @@ const Game = () => {
         { isStatic: true } // options
       );
 
-      grounds.push(currGround);
-      if (grounds.length > 2) {
-        let oldGround = grounds.shift();
-        World.remove(engine.world, oldGround);
+      _grounds.push(currGround);
+      if (_grounds.length > 2) {
+        let oldGround = _grounds.shift();
+        World.remove(world, oldGround);
       }
       // console.log(currGroundEnd + groundGap);
       // console.log(currGround.position.y);
@@ -150,19 +183,16 @@ const Game = () => {
       // );
       currGroundEnd = currGround.position.x + currHeight;
 
-      let coinX = currGroundEnd + groundGap + 100;
-      let coinY = currGround.position.y - 300;
-      let coin;
-      for (let i = 0; i < 4; i++) {
-        coin = new Coin(coinX, coinY);
-        console.log('coin', coin.collisionFilter);
-        World.add(engine.world, coin.body);
-        coinX += 50;
-        coinY += 20 + i * i * 3;
-      }
+      World.add(world, [currGround]);
 
-      World.add(engine.world, [currGround]);
+      return currGround;
+    };
+
+    if (needToSpawnGround) {
+      currGround = spawnNewGround(grounds, engine.world);
+      spawnCoin(engine.world, currGroundEnd, groundGap, currGround);
     }
+
     // ground.position.x += 1;
     window.requestAnimationFrame(run);
     Engine.update(engine, 1000 / 60);
