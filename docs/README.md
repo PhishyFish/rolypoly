@@ -21,9 +21,8 @@ The player will control a character that is continuously rolling to the right. T
 ## Technologies
 
 * Vanilla JavaScript for overall structure and game logic
-* HTML5 Canvas for DOM manipulation and rendering
 * Matter.js for the game physics engine
-* Webpack to bundle and server up various scripts
+* Webpack to bundle and serve up various scripts
 
 ## Implementation Timeline
 
